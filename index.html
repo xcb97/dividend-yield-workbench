@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📊 股息率工作台</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --bg2: #0f172a;
+      --card: #151e31;
+      --card2: #1a2440;
+      --border: rgba(255, 255, 255, .08);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --green: #22c55e;
+      --green-soft: rgba(34, 197, 94, .15);
+      --green-brd: rgba(34, 197, 94, .55);
+      --green-txt: #6ee7b7;
+      --red: #ef4444;
+      --red-soft: rgba(239, 68, 68, .14);
+      --red-brd: rgba(239, 68, 68, .55);
+      --red-txt: #fca5a5;
+      --amber: #facc15;
+      --blue: #38bdf8;
+      --up: #f87171;
+      /* A股红涨 */
+      --down: #4ade80;
+      /* A股绿跌 */
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      background:
+        radial-gradient(1200px 500px at 20% -10%, rgba(56, 189, 248, .10), transparent 60%),
+        radial-gradient(1000px 500px at 90% -10%, rgba(34, 197, 94, .10), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      min-height: 100vh;
+      padding: 20px 16px 48px;
+    }
+
+    header {
+      max-width: 1280px;
+      margin: 0 auto 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h1 {
+      font-size: 24px;
+      letter-spacing: .5px;
+      background: linear-gradient(90deg, #7dd3fc, #34d399);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 12.5px;
+      margin-top: 2px;
+      flex-basis: 100%
+    }
+
+    .status {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap
+    }
+
+    .pill {
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 12px;
+      white-space: nowrap;
+    }
+
+    .pill b {
+      color: var(--text)
+    }
+
+    button {
+      background: linear-gradient(135deg, #0ea5e9, #10b981);
+      color: #04231f;
+      border: none;
+      border-radius: 999px;
+      padding: 9px 18px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(14, 165, 233, .25);
+      transition: .18s;
+    }
+
+    button:hover {
+      filter: brightness(1.12);
+      transform: translateY(-1px)
+    }
+
+    button:active {
+      transform: translateY(0)
+    }
+
+    button.ghost {
+      background: transparent;
+      color: var(--blue);
+      border: 1px solid rgba(56, 189, 248, .4);
+      box-shadow: none;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 8px;
+    }
+
+    button.ghost:hover {
+      background: rgba(56, 189, 248, .12)
+    }
+
+    #stats {
+      max-width: 1280px;
+      margin: 0 auto 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap
+    }
+
+    #board {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, var(--card), var(--bg2));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 16px 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+      position: relative;
+      overflow: hidden;
+      transition: transform .15s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(56, 189, 248, .25)
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 3px;
+      background: linear-gradient(90deg, #0ea5e9, #10b981);
+      opacity: .6
+    }
+
+    .head {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      flex-wrap: wrap
+    }
+
+    .idbox {
+      min-width: 0
+    }
+
+    .name {
+      font-size: 17px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px
+    }
+
+    .name .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #475569;
+      flex: none
+    }
+
+    .code {
+      font-size: 11.5px;
+      color: var(--muted);
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      margin-top: 2px
+    }
+
+    .pricebox {
+      margin-left: auto;
+      text-align: right
+    }
+
+    .live-price {
+      font-size: 22px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums
+    }
+
+    .chg {
+      font-size: 12.5px;
+      font-weight: 600;
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums
+    }
+
+    .up {
+      color: var(--up)
+    }
+
+    .down {
+      color: var(--down)
+    }
+
+    .flat {
+      color: var(--muted)
+    }
+
+    .yieldbox {
+      flex-basis: 100%;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-top: 10px
+    }
+
+    .yield-label {
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .yield-value {
+      font-size: 34px;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .5px;
+      line-height: 1
+    }
+
+    .yield-unit {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600
+    }
+
+    .bar-zone {
+      position: relative;
+      margin-top: 14px;
+      padding-top: 40px
+    }
+
+    .float-bubble {
+      position: absolute;
+      top: 2px;
+      transform: translateX(-50%);
+      background: var(--blue);
+      color: #062a3a;
+      font-weight: 800;
+      font-size: 12.5px;
+      padding: 5px 10px;
+      border-radius: 9px;
+      white-space: nowrap;
+      z-index: 3;
+      box-shadow: 0 4px 14px rgba(56, 189, 248, .4);
+      cursor: default;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1.25;
+      transition: left .4s cubic-bezier(.2, .8, .3, 1);
+    }
+
+    .float-bubble::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: var(--blue);
+    }
+
+    .float-bubble .fb-y {
+      font-size: 10.5px;
+      opacity: .85;
+      font-weight: 600
+    }
+
+    .bar-track {
+      display: flex;
+      gap: 5px;
+      height: 78px
+    }
+
+    .cell {
+      flex: 1;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      border: 1px solid;
+      cursor: default;
+      transition: .2s;
+      position: relative;
+    }
+
+    .cell .r {
+      font-size: 13.5px;
+      font-weight: 800
+    }
+
+    .cell .tp {
+      font-size: 11.5px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      opacity: .95
+    }
+
+    .cell .tpl {
+      font-size: 9.5px;
+      opacity: .7
+    }
+
+    .cell.green {
+      background: var(--green-soft);
+      border-color: var(--green-brd);
+      color: var(--green-txt)
+    }
+
+    .cell.green:hover {
+      background: rgba(34, 197, 94, .25)
+    }
+
+    .cell.red {
+      background: var(--red-soft);
+      border-color: var(--red-brd);
+      color: var(--red-txt)
+    }
+
+    .cell.red:hover {
+      background: rgba(239, 68, 68, .22)
+    }
+
+    .cell .flag {
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      opacity: .9
+    }
+
+    .editors {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+      border-top: 1px dashed var(--border);
+      padding-top: 12px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px
+    }
+
+    .field label {
+      font-size: 11px;
+      color: var(--muted)
+    }
+
+    .field input {
+      background: #0b1322;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 7px 9px;
+      font-size: 13.5px;
+      width: 118px;
+      font-variant-numeric: tabular-nums;
+      outline: none;
+      transition: .15s;
+    }
+
+    .field input:focus {
+      border-color: var(--blue)
+    }
+
+    .field input.dirty {
+      border-color: var(--amber);
+      box-shadow: 0 0 0 2px rgba(250, 204, 21, .15)
+    }
+
+    .editors .restore {
+      margin-left: auto
+    }
+
+    .dirty-tag {
+      font-size: 10px;
+      color: var(--amber);
+      display: none
+    }
+
+    .dirty-tag.on {
+      display: inline
+    }
+
+    footer {
+      max-width: 1280px;
+      margin: 26px auto 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.9
+    }
+
+    footer b {
+      color: var(--text)
+    }
+
+    .legend {
+      max-width: 1280px;
+      margin: 0 auto 14px;
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .legend i {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+      margin-right: 5px;
+      vertical-align: -1px
+    }
+
+    .spin {
+      animation: spin 1s linear infinite;
+      display: inline-block
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    @media(max-width:420px) {
+      #board {
+        grid-template-columns: 1fr
+      }
+
+      .field input {
+        width: 100%
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>📊 股息率工作台</h1>
+    <div class="sub">当前股息率 = 每股派息 ÷ 实时股价 ｜ 目标价 = 每股派息 ÷ 目标股息率 —— 手动修改派息/价格即时重算，自动刷新不会覆盖手动值</div>
+    <div class="status">
+      <span class="pill" id="lastUpdate">行情：尚未刷新</span>
+      <span class="pill">自动刷新 <b>60s</b></span>
+      <button id="refreshBtn">🔄 刷新行情</button>
+    </div>
+  </header>
+
+  <div id="stats"></div>
+
+  <div class="legend">
+    <span><i style="background:rgba(34,197,94,.5)"></i>已达标（当前股息率 ≥ 该档）</span>
+    <span><i style="background:rgba(239,68,68,.5)"></i>未达标（需股价再跌才够）</span>
+    <span>横条从左至右：6% → 4% 股息率目标档</span>
+  </div>
+
+  <main id="board"></main>
+
+  <footer>
+    数据来源：腾讯财经实时行情（qt.gtimg.cn，页面每 60 秒自动刷新）。<br>
+    <b>使用提示：</b>① 每张卡片可直接修改「每股派息」和「实时价」做假设测算，手动改过的价格带 <span style="color:var(--amber)">黄色</span> 标记且不会被自动刷新覆盖；② 点击卡片右侧「↺
+    恢复实时价」可回到行情价；③ 浮标表示当前所处股息率位置，左侧格子为目标股息率 ≥ 当前（更便宜）、右侧为 ≤ 当前（已达成）。股息率越高买入性价比越高。
+  </footer>
+
+  <script>
+    "use strict";
+
+    /* ================= 股票数据（每股派息，可替换成你的持仓） ================= */
+    const STOCKS = [
+      { name: "国电电力", code: "sh600795", div: 0.241 },
+      { name: "神火股份", code: "sz000933", div: 1.4 },
+      { name: "华能国际", code: "sh600011", div: 0.4 },
+      { name: "招商银行", code: "sh600036", div: 2.016 },
+      { name: "中国平安", code: "sh601318", div: 2.7 },
+      { name: "海尔智家", code: "sh600690", div: 1.1559 },
+      { name: "东阿阿胶", code: "sz000423", div: 2.7056 },
+      { name: "云南白药", code: "sz000538", div: 2.602 },
+      { name: "伊利股份", code: "sh600887", div: 1.38 },
+      { name: "美的集团", code: "sz000333", div: 4.3 },
+      { name: "格力电器", code: "sz000651", div: 3 },
+      { name: "中国移动", code: "sh600941", div: 4.7037 },
+    ];
+
+    /* 横条：从左(6%) 到右(4%)，5 档 */
+    const RATES = [6, 5.5, 5, 4.5, 4];
+    const MIN_Y = 4, MAX_Y = 6;
+
+    /* ================= 运行时状态 ================= */
+    const quotes = {};   // code -> {price, change, changePct, time}
+    const dirty = {};   // code -> true 表示价格被手动修改过
+    let updating = false;
+
+    /* ================= 工具 ================= */
+    function fmt(n, d) { return (n == null || isNaN(n)) ? "--" : n.toFixed(d == null ? 2 : d); }
+    function getPrice(st) {
+      if (st.manualPrice != null) return st.manualPrice;
+      const q = quotes[st.code];
+      return q ? q.price : null;
+    }
+    function getYield(st) {
+      const p = getPrice(st);
+      if (p == null || p <= 0) return null;
+      return st.div / p * 100;
+    }
+    function yieldColor(y) {
+      if (y >= 6) return "#22c55e";
+      if (y >= 5.5) return "#4ade80";
+      if (y >= 5) return "#a3e635";
+      if (y >= 4.5) return "#facc15";
+      if (y >= 4) return "#fb923c";
+      return "#f87171";
+    }
+    function fmtTime(t) {
+      if (!t) return "";
+      const s = String(t);
+      if (s.length === 14) return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)} ${s.slice(8, 10)}:${s.slice(10, 12)}:${s.slice(12, 14)}`;
+      if (s.length === 8) return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
+      return s;
+    }
+
+    /* ================= 渲染 ================= */
+    const board = document.getElementById("board");
+
+    function renderAll() {
+      board.innerHTML = "";
+      STOCKS.forEach(st => board.appendChild(renderCard(st)));
+      updateStats();
+    }
+
+    function renderCard(st) {
+      const card = document.createElement("article");
+      card.className = "card";
+      card.id = "card-" + st.code;
+
+      card.innerHTML = `
+    <div class="head">
+      <div class="idbox">
+        <div class="name"><span class="dot"></span>${st.name}</div>
+        <div class="code">${st.code}</div>
+      </div>
+      <div class="pricebox">
+        <div class="live-price" data-role="price">--</div>
+        <div class="chg flat" data-role="chg">--</div>
+      </div>
+      <div class="yieldbox">
+        <span class="yield-label">当前股息率</span>
+        <span class="yield-value" data-role="yield" style="color:var(--muted)">--</span>
+        <span class="yield-unit">%</span>
+      </div>
+    </div>
+
+    <div class="bar-zone">
+      <div class="float-bubble" data-role="bubble" style="left:0" title="实时价 / 当前股息率">
+        <span data-role="bubble-main">-- / --</span>
+        <span class="fb-y" data-role="bubble-y"></span>
+      </div>
+      <div class="bar-track">
+        ${RATES.map(r => `
+          <div class="cell red" data-rate="${r}">
+            <span class="r">${r}%</span>
+            <span class="tp" data-role="tp-${r}">--</span>
+            <span class="tpl">元/股</span>
+            <span class="flag" data-role="flag-${r}"></span>
+          </div>`).join("")}
+      </div>
+    </div>
+
+    <div class="editors">
+      <div class="field">
+        <label>每股派息（元）</label>
+        <input type="number" step="0.0001" min="0" data-role="div-input" value="${st.div}">
+      </div>
+      <div class="field">
+        <label>实时价（元）<span class="dirty-tag" data-role="dirty-tag">● 手动价</span></label>
+        <input type="number" step="0.001" min="0" data-role="price-input" placeholder="--">
+      </div>
+      <button class="ghost restore" data-role="restore">↺ 恢复实时价</button>
+    </div>
+  `;
+
+      /* ---- 事件绑定 ---- */
+      card.querySelector('[data-role="div-input"]').addEventListener("input", e => {
+        const v = parseFloat(e.target.value);
+        st.div = (isNaN(v) || v < 0) ? 0 : v;
+        updateCard(st, card);
+        updateStats();
+      });
+      card.querySelector('[data-role="price-input"]').addEventListener("input", e => {
+        const v = parseFloat(e.target.value);
+        if (isNaN(v) || v <= 0) {
+          st.manualPrice = undefined;
+          dirty[st.code] = false;
+        } else {
+          st.manualPrice = v;
+          dirty[st.code] = true;
+        }
+        updateCard(st, card);
+        updateStats();
+      });
+      card.querySelector('[data-role="restore"]').addEventListener("click", () => {
+        dirty[st.code] = false;
+        st.manualPrice = undefined;
+        const q = quotes[st.code];
+        card.querySelector('[data-role="price-input"]').value = q ? q.price : "";
+        updateCard(st, card);
+        updateStats();
+      });
+
+      updateCard(st, card);
+      return card;
+    }
+
+    function updateCard(st, card) {
+      const px = getPrice(st);
+      const y = getYield(st);
+      const q = quotes[st.code];
+
+      /* 价格 & 涨跌 */
+      const priceEl = card.querySelector('[data-role="price"]');
+      priceEl.textContent = fmt(px, 2);
+      const chgEl = card.querySelector('[data-role="chg"]');
+      if (q && dirty[st.code] === false) {
+        const cp = q.changePct;
+        chgEl.textContent = (cp > 0 ? "+" : "") + fmt(cp, 2) + "%" + (q.change != null ? "  " + (q.change > 0 ? "+" : "") + fmt(q.change, 2) : "");
+        chgEl.className = "chg " + (cp > 0.0001 ? "up" : (cp < -0.0001 ? "down" : "flat"));
+      } else if (dirty[st.code]) {
+        chgEl.textContent = "手动价";
+        chgEl.className = "chg flat";
+      } else {
+        chgEl.textContent = "--";
+        chgEl.className = "chg flat";
+      }
+
+      /* 股息率大字 */
+      const yEl = card.querySelector('[data-role="yield"]');
+      if (y == null) {
+        yEl.textContent = "--";
+        yEl.style.color = "var(--muted)";
+      } else {
+        yEl.textContent = y.toFixed(2);
+        yEl.style.color = yieldColor(y);
+      }
+
+      /* 输入框 */
+      const priceInput = card.querySelector('[data-role="price-input"]');
+      if (dirty[st.code] === false && !priceInput.matches(":focus")) {
+        priceInput.value = (px != null) ? px.toFixed(3) : "";
+      }
+      priceInput.classList.toggle("dirty", !!dirty[st.code]);
+      card.querySelector('[data-role="dirty-tag"]').classList.toggle("on", !!dirty[st.code]);
+
+      /* 浮标 */
+      const bubble = card.querySelector('[data-role="bubble"]');
+      if (y == null) {
+        bubble.style.display = "none";
+      } else {
+        bubble.style.display = "";
+        const pos = (MAX_Y - y) / (MAX_Y - MIN_Y) * 100;
+        const clamped = Math.max(0, Math.min(100, pos));
+        bubble.style.left = clamped + "%";
+        bubble.querySelector('[data-role="bubble-main"]').textContent = fmt(px, 2) + " / " + y.toFixed(2) + "%";
+        bubble.querySelector('[data-role="bubble-y"]').textContent = "目标股息率方向 ←6%   4%→";
+        bubble.title = "实时价 " + fmt(px, 2) + " 元 ｜ 当前股息率 " + y.toFixed(2) + "%" + (dirty[st.code] ? "（手动价）" : "");
+      }
+
+      /* 5 格地块 */
+      RATES.forEach(r => {
+        const cell = card.querySelector(`[data-rate="${r}"]`);
+        const tp = st.div / (r / 100);
+        cell.querySelector(`[data-role="tp-${r}"]`).textContent = fmt(tp, 2);
+        const done = (y != null) && (r <= y);
+        cell.classList.toggle("green", done);
+        cell.classList.toggle("red", !done);
+        const flag = cell.querySelector(`[data-role="flag-${r}"]`);
+        flag.textContent = done ? "已达标" : "需再跌";
+        cell.title = `目标股息率 ${r}% ｜ 目标价 ${fmt(tp, 2)} 元 ${done ? "（当前已达标，可买入）" : "（还需股价再跌才够）"}`;
+      });
+    }
+
+    function updateStats() {
+      const box = document.getElementById("stats");
+      let n = 0, sum = 0, over5 = 0;
+      STOCKS.forEach(st => {
+        const y = getYield(st);
+        if (y != null) { n++; sum += y; if (y >= 5) over5++; }
+      });
+      const avg = n ? (sum / n).toFixed(2) : "--";
+      box.innerHTML = `
+    <span class="pill">股票 <b>${STOCKS.length}</b> 只</span>
+    <span class="pill">已有行情 <b>${n}</b> 只</span>
+    <span class="pill">平均股息率 <b style="color:${avg === "--" ? "" : yieldColor(parseFloat(avg))}">${avg}%</b></span>
+    <span class="pill">股息率 ≥5% <b style="color:var(--green)">${over5}</b> 只</span>
+  `;
+    }
+
+    /* ================= 行情拉取（腾讯 JSONP） ================= */
+    function fetchQuotes() {
+      if (updating) return Promise.resolve();
+      updating = true;
+      const btn = document.getElementById("refreshBtn");
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spin">◌</span> 刷新中…';
+
+      return new Promise((resolve, reject) => {
+        const codes = STOCKS.map(s => s.code).join(",");
+        const script = document.createElement("script");
+        script.src = "https://qt.gtimg.cn/q=" + codes + "&_=" + Date.now();
+        script.onload = () => {
+          let got = 0;
+          STOCKS.forEach(st => {
+            const raw = window["v_" + st.code];
+            if (raw && typeof raw === "string") {
+              const p = raw.split("~");
+              const price = parseFloat(p[3]);
+              if (p.length > 34 && price > 0) {
+                quotes[st.code] = {
+                  price,
+                  change: parseFloat(p[31]),
+                  changePct: parseFloat(p[32]),
+                  time: p[30] || ""
+                };
+                got++;
+              }
+            }
+          });
+          script.remove();
+          /* 只更新未被手动锁定的卡片 */
+          STOCKS.forEach(st => {
+            const card = document.getElementById("card-" + st.code);
+            if (card) updateCard(st, card);
+          });
+          updateStats();
+          document.getElementById("lastUpdate").innerHTML =
+            "行情：<b style='color:var(--green)'>" + got + "</b> 只已更新"
+            + (quotes[STOCKS[0] && STOCKS[0].code] && quotes[STOCKS[0].code].time ? " ｜ 时间 " + fmtTime(quotes[STOCKS[0].code].time) : "");
+          updating = false;
+          btn.disabled = false;
+          btn.innerHTML = "🔄 刷新行情";
+          resolve(got);
+        };
+        script.onerror = () => {
+          script.remove();
+          updating = false;
+          btn.disabled = false;
+          btn.innerHTML = "🔄 刷新行情";
+          document.getElementById("lastUpdate").innerHTML = "行情：<b style='color:var(--red)'>拉取失败</b>，请检查网络";
+          reject(new Error("fetch failed"));
+        };
+        document.head.appendChild(script);
+      });
+    }
+
+    /* ================= 启动 ================= */
+    renderAll();
+    fetchQuotes().catch(() => { });
+    setInterval(() => { fetchQuotes().catch(() => { }); }, 60000);
+    document.getElementById("refreshBtn").addEventListener("click", () => fetchQuotes().catch(() => { }));
+  </script>
+</body>
+
+</html>
