@@ -508,6 +508,210 @@
         width: 100%
       }
     }
+
+    /* ===== 列表视图 ===== */
+    .view-bar {
+      max-width: 1280px;
+      margin: 0 auto 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      background: transparent;
+      color: var(--blue);
+      border: 1px solid rgba(56, 189, 248, .4);
+      box-shadow: none;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: .15s;
+      display: none;
+    }
+
+    .back-btn:hover {
+      background: rgba(56, 189, 248, .12);
+    }
+
+    .back-btn.show {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .view-stats {
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    .view-stats b {
+      color: var(--text);
+    }
+
+    #listView {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #listView.show {
+      display: flex;
+    }
+
+    .list-head,
+    .list-row {
+      display: grid;
+      grid-template-columns: 56px 1fr 130px 130px 44px;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 12px;
+    }
+
+    .list-head {
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(21, 30, 49, .5);
+      border: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      backdrop-filter: blur(8px);
+    }
+
+    .list-row {
+      background: linear-gradient(180deg, var(--card), var(--bg2));
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: .15s;
+      font-size: 14.5px;
+    }
+
+    .list-row:hover {
+      transform: translateY(-1px);
+      border-color: rgba(56, 189, 248, .35);
+      background: linear-gradient(180deg, #1a2440, #101a30);
+    }
+
+    .list-row .lk-rank {
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .list-row .lk-rank span.mini-badge {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      color: #04231f;
+      background: linear-gradient(135deg, #0ea5e9, #10b981);
+      flex: none;
+    }
+
+    .list-row .lk-rank span.mini-badge.top3 {
+      background: linear-gradient(135deg, #fbbf24, #f97316);
+      color: #3a1c00;
+    }
+
+    .list-row .lk-name {
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .list-row .lk-name .lk-code {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-weight: 400;
+      flex: none;
+    }
+
+    .list-row .lk-pricebox {
+      text-align: right;
+    }
+
+    .list-row .lk-price {
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .list-row .lk-chg {
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .list-row .lk-yield {
+      text-align: right;
+      font-weight: 900;
+      font-size: 17px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .list-row .lk-yield .u {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .list-row .lk-arrow {
+      text-align: right;
+      color: var(--muted);
+      font-size: 16px;
+      opacity: .6;
+    }
+
+    .up {
+      color: var(--up) !important;
+    }
+
+    .down {
+      color: var(--down) !important;
+    }
+
+    /* ===== 详情视图 ===== */
+    #detailView {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: none;
+    }
+
+    #detailView.show {
+      display: block;
+    }
+
+    @media(max-width:420px) {
+      .list-head,
+      .list-row {
+        grid-template-columns: 40px 1fr 88px 88px 24px;
+        gap: 6px;
+        padding: 10px 10px;
+      }
+
+      .list-row .lk-name .lk-code {
+        display: none;
+      }
+    }
   </style>
 </head>
 
@@ -523,15 +727,21 @@
     </div>
   </header>
 
+  <div id="viewBar" class="view-bar">
+    <button id="backBtn" class="back-btn">← 返回列表</button>
+    <div id="viewStats" class="view-stats"></div>
+  </div>
+
   <div id="stats"></div>
 
   <div class="legend">
     <span><i style="background:rgba(34,197,94,.5)"></i>已达标（当前股息率 ≥ 该档）</span>
     <span><i style="background:rgba(239,68,68,.5)"></i>未达标（需股价再跌才够）</span>
-    <span>横条从左至右：6% → 4% 股息率目标档</span>
+    <span>横条从左至右：6% → 4% 股息率目标档 ｜ 点击列表行进入详情</span>
   </div>
 
-  <main id="board"></main>
+  <main id="listView" class="show"></main>
+  <main id="detailView"></main>
 
   <footer>
     数据来源：腾讯财经实时行情（qt.gtimg.cn，页面每 60 秒自动刷新）。<br>
@@ -597,31 +807,107 @@
     }
 
     /* ================= 渲染 ================= */
+    const listView = document.getElementById("listView");
+    const detailView = document.getElementById("detailView");
+    const backBtn = document.getElementById("backBtn");
+    const viewStats = document.getElementById("viewStats");
     const board = document.getElementById("board");
+    let currentDetailCode = null; // 当前详情页展示的股票
 
-    function renderAll() {
-      board.innerHTML = "";
-      STOCKS.forEach(st => board.appendChild(renderCard(st)));
-      sortBoard();
-      updateStats();
+    /* 排序：按当前股息率从高到低（并列按 STOCKS 顺序） */
+    function sortedStocks() {
+      return STOCKS
+        .map((st, idx) => ({ st, y: getYield(st) ?? -1, idx }))
+        .sort((a, b) => (b.y - a.y) || (a.idx - b.idx))
+        .map(it => it.st);
     }
 
-    /* 按当前股息率从高到低动态排序（refresh/manual 修改后都会重排） */
-    function sortBoard() {
-      const items = STOCKS
-        .map((st, idx) => ({ st, y: getYield(st) ?? -1, idx }))
-        .sort((a, b) => (b.y - a.y) || (a.idx - b.idx));
-      items.forEach((it, rank) => {
-        const card = document.getElementById("card-" + it.st.code);
-        if (!card) return;
-        card.style.order = rank + 1;
-        const badge = card.querySelector('[data-role="rank"]');
-        if (badge) {
-          badge.textContent = "#" + (rank + 1);
-          badge.classList.toggle("top3", rank < 3);
-          badge.title = "股息率排名 #" + (rank + 1);
+    /* ===== 视图切换 ===== */
+    function showView(view) {
+      if (view === "list") {
+        listView.classList.add("show");
+        detailView.classList.remove("show");
+        backBtn.classList.remove("show");
+        currentDetailCode = null;
+        renderList();          // 回到列表时刷新（可能详情里改过派息/价格）
+        renderAll();           // 同步隐藏的详情卡片数据
+        updateStats();
+      } else {
+        listView.classList.remove("show");
+        detailView.classList.add("show");
+        backBtn.classList.add("show");
+        if (currentDetailCode) {
+          const st = STOCKS.find(s => s.code === currentDetailCode);
+          if (st) {
+            detailView.innerHTML = "";
+            detailView.appendChild(renderCard(st));
+            const card = detailView.querySelector(".card");
+            updateCard(st, card);
+            /* 设置详情卡片的股息率排名徽章 */
+            const rank = sortedStocks().findIndex(s => s.code === st.code);
+            const badge = card.querySelector('[data-role="rank"]');
+            if (badge && rank >= 0) {
+              badge.textContent = "#" + (rank + 1);
+              badge.classList.toggle("top3", rank < 3);
+              badge.title = "股息率排名 #" + (rank + 1);
+            }
+          }
         }
+        updateStats();
+      }
+    }
+
+    /* ===== 列表视图渲染 ===== */
+    function renderList() {
+      const sts = sortedStocks();
+      const rows = sts.map((st, rank) => {
+        const px = getPrice(st);
+        const y = getYield(st);
+        const q = quotes[st.code];
+        const chgCls = q ? (q.changePct > 0.0001 ? "up" : (q.changePct < -0.0001 ? "down" : "flat")) : "flat";
+        const chgTxt = q ? (q.changePct > 0 ? "+" : "") + fmt(q.changePct, 2) + "%" : "--";
+        return `
+      <div class="list-row" data-code="${st.code}" title="${st.name} ${st.code} ｜ 当前股息率 ${y == null ? "--" : y.toFixed(2) + "%"}">
+        <div class="lk-rank"><span class="mini-badge ${rank < 3 ? "top3" : ""}">${rank + 1}</span></div>
+        <div class="lk-name">${st.name}<span class="lk-code">${st.code}</span></div>
+        <div class="lk-pricebox">
+          <div class="lk-price ${chgCls}">${fmt(px, 2)}</div>
+          <div class="lk-chg ${chgCls}">${chgTxt}</div>
+        </div>
+        <div class="lk-yield" style="color:${y == null ? "var(--muted)" : yieldColor(y)}">${y == null ? "--" : y.toFixed(2)}<span class="u">%</span></div>
+        <div class="lk-arrow">›</div>
+      </div>`;
+      }).join("");
+
+      listView.innerHTML = `
+    <div class="list-head">
+      <div>排名</div>
+      <div>名称</div>
+      <div style="text-align:right">股价</div>
+      <div style="text-align:right">当前股息率</div>
+      <div></div>
+    </div>
+    ${rows}
+  `;
+
+      listView.querySelectorAll(".list-row").forEach(row => {
+        row.addEventListener("click", () => {
+          currentDetailCode = row.dataset.code;
+          showView("detail");
+        });
       });
+    }
+
+    /* ===== 详情视图渲染 ===== */
+    function renderAll() {
+      // 保留旧逻辑：若 detailView 有卡片则也刷新
+      if (currentDetailCode) {
+        const st = STOCKS.find(s => s.code === currentDetailCode);
+        if (st) {
+          const card = detailView.querySelector(".card");
+          if (card) updateCard(st, card);
+        }
+      }
     }
 
     function renderCard(st) {
@@ -680,7 +966,7 @@
         const v = parseFloat(e.target.value);
         st.div = (isNaN(v) || v < 0) ? 0 : v;
         updateCard(st, card);
-        sortBoard();
+        renderList();
         updateStats();
       });
       card.querySelector('[data-role="price-input"]').addEventListener("input", e => {
@@ -693,7 +979,7 @@
           dirty[st.code] = true;
         }
         updateCard(st, card);
-        sortBoard();
+        renderList();
         updateStats();
       });
       card.querySelector('[data-role="restore"]').addEventListener("click", () => {
@@ -702,7 +988,7 @@
         const q = quotes[st.code];
         card.querySelector('[data-role="price-input"]').value = q ? q.price : "";
         updateCard(st, card);
-        sortBoard();
+        renderList();
         updateStats();
       });
 
@@ -791,6 +1077,13 @@
     <span class="pill">平均股息率 <b style="color:${avg === "--" ? "" : yieldColor(parseFloat(avg))}">${avg}%</b></span>
     <span class="pill">股息率 ≥5% <b style="color:var(--green)">${over5}</b> 只</span>
   `;
+      /* 顶部视图状态条 */
+      if (currentDetailCode) {
+        const st = STOCKS.find(s => s.code === currentDetailCode);
+        viewStats.innerHTML = st ? `正在查看：<b>${st.name}</b>（${st.code}）｜ 每股派息 ${st.div} 元` : "";
+      } else {
+        viewStats.innerHTML = `<b>${STOCKS.length}</b> 只股票 · 按当前股息率从高到低排序`;
+      }
     }
 
     /* ================= 行情拉取（腾讯 JSONP） ================= */
@@ -829,7 +1122,7 @@
             const card = document.getElementById("card-" + st.code);
             if (card) updateCard(st, card);
           });
-          sortBoard();
+          renderList();
           updateStats();
           document.getElementById("lastUpdate").innerHTML =
             "行情：<b style='color:var(--green)'>" + got + "</b> 只已更新"
@@ -852,7 +1145,9 @@
     }
 
     /* ================= 启动 ================= */
-    renderAll();
+    renderList();
+    updateStats();
+    backBtn.addEventListener("click", () => showView("list"));
     fetchQuotes().catch(() => { });
     setInterval(() => { fetchQuotes().catch(() => { }); }, 60000);
     document.getElementById("refreshBtn").addEventListener("click", () => fetchQuotes().catch(() => { }));
