@@ -142,9 +142,10 @@
     #board {
       max-width: 1280px;
       margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      display: flex;
+      flex-wrap: wrap;
       gap: 16px;
+      align-content: flex-start;
     }
 
     .card {
@@ -155,7 +156,11 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
       position: relative;
       overflow: hidden;
-      transition: transform .15s;
+      flex: 1 1 360px;
+      min-width: 360px;
+      max-width: 100%;
+      order: 0;
+      transition: transform .15s, order .5s, box-shadow .15s;
     }
 
     .card:hover {
@@ -197,6 +202,27 @@
       border-radius: 50%;
       background: #475569;
       flex: none
+    }
+
+    .rank-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #04231f;
+      background: linear-gradient(135deg, #0ea5e9, #10b981);
+      box-shadow: 0 2px 8px rgba(14, 165, 233, .35);
+    }
+
+    .rank-badge.top3 {
+      background: linear-gradient(135deg, #fbbf24, #f97316);
+      box-shadow: 0 2px 8px rgba(249, 115, 22, .4);
+      color: #3a1c00;
     }
 
     .code {
@@ -473,8 +499,9 @@
     }
 
     @media(max-width:420px) {
-      #board {
-        grid-template-columns: 1fr
+      .card {
+        flex: 1 1 100%;
+        min-width: 0;
       }
 
       .field input {
@@ -575,7 +602,26 @@
     function renderAll() {
       board.innerHTML = "";
       STOCKS.forEach(st => board.appendChild(renderCard(st)));
+      sortBoard();
       updateStats();
+    }
+
+    /* 按当前股息率从高到低动态排序（refresh/manual 修改后都会重排） */
+    function sortBoard() {
+      const items = STOCKS
+        .map((st, idx) => ({ st, y: getYield(st) ?? -1, idx }))
+        .sort((a, b) => (b.y - a.y) || (a.idx - b.idx));
+      items.forEach((it, rank) => {
+        const card = document.getElementById("card-" + it.st.code);
+        if (!card) return;
+        card.style.order = rank + 1;
+        const badge = card.querySelector('[data-role="rank"]');
+        if (badge) {
+          badge.textContent = "#" + (rank + 1);
+          badge.classList.toggle("top3", rank < 3);
+          badge.title = "股息率排名 #" + (rank + 1);
+        }
+      });
     }
 
     function renderCard(st) {
@@ -586,7 +632,7 @@
       card.innerHTML = `
     <div class="head">
       <div class="idbox">
-        <div class="name"><span class="dot"></span>${st.name}</div>
+        <div class="name"><span class="rank-badge" data-role="rank">—</span><span class="dot"></span>${st.name}</div>
         <div class="code">${st.code}</div>
       </div>
       <div class="pricebox">
@@ -634,6 +680,7 @@
         const v = parseFloat(e.target.value);
         st.div = (isNaN(v) || v < 0) ? 0 : v;
         updateCard(st, card);
+        sortBoard();
         updateStats();
       });
       card.querySelector('[data-role="price-input"]').addEventListener("input", e => {
@@ -646,6 +693,7 @@
           dirty[st.code] = true;
         }
         updateCard(st, card);
+        sortBoard();
         updateStats();
       });
       card.querySelector('[data-role="restore"]').addEventListener("click", () => {
@@ -654,6 +702,7 @@
         const q = quotes[st.code];
         card.querySelector('[data-role="price-input"]').value = q ? q.price : "";
         updateCard(st, card);
+        sortBoard();
         updateStats();
       });
 
@@ -780,6 +829,7 @@
             const card = document.getElementById("card-" + st.code);
             if (card) updateCard(st, card);
           });
+          sortBoard();
           updateStats();
           document.getElementById("lastUpdate").innerHTML =
             "行情：<b style='color:var(--green)'>" + got + "</b> 只已更新"
